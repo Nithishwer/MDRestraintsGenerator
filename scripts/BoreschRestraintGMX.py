@@ -77,11 +77,14 @@ if __name__ == "__main__":
     # Plot out the statistics
     boresch.restraint.plot(path=args.outpath)
 
-    # Write out the intermolecular section to a topology
-    boresch.restraint.write(path=args.outpath,
-                            force_constant=args.force_constant)
+    # Fit force constants
+    boresch.restraint.fit_fc(temperature=args.temperature)
 
-    dG_off = boresch.restraint.standard_state(force_constant=args.force_constant,
+    # Write out the intermolecular section to a topology
+    boresch.restraint.write(path=args.outpath)
+                            #force_constant=args.force_constant)
+
+    dG_off = boresch.restraint.standard_state(#force_constant=args.force_constant,
                                               temperature=args.temperature)
 
     print(f"dG_off: {dG_off}, dG_on: {-dG_off}")

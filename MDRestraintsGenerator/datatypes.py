@@ -769,7 +769,7 @@ class HarmonicRestraint(BaseCOMDistanceRestraint):
 
 
 class BoreschRestraint:
-    """A class to store and analyze the bond/angle/diehdral information related
+    """A class to store and analyze the bond/angle/dihedral information related
     to a given Boresch restraint."""
     def __init__(self, atomgroup, l_atoms, p_atoms, n_frames=None):
         """Init routine for the BoreschRestraint class.
@@ -890,6 +890,16 @@ class BoreschRestraint:
 
         self.min_frame = self.rmsd_values.argmin()
         self.min_rmsd = np.min(self.rmsd_values)
+    
+    def fit_fc(self,temperature=298.15):
+        """Function to fit the force constant of the Boresch restraint to the distribution observed in the trajectory"""
+        self.bond.fc = (0.8314*temperature)//self.bond.var # 0.8314 is kB*N in kJ/(mol.nm^2) ;
+        # kB * N = R = 8.314 J/mol.K; x10^-3 to convert it to kJ and x10^2 to convert A^-2 to nm^-2
+        self.angles[0].fc = (0.008314*temperature)//self.angles[0].var # No need to convert A^-2 to nm^-2 since its radians
+        self.angles[1].fc = (0.008314*temperature)//self.angles[1].var
+        self.dihedrals[0].fc = (0.008314*temperature)//self.dihedrals[0].var
+        self.dihedrals[1].fc = (0.008314*temperature)//self.dihedrals[1].var
+        self.dihedrals[2].fc = (0.008314*temperature)//self.dihedrals[2].var
 
     def plot(self, frame=None, path=None):
         """Plots all the analyzed data
@@ -921,7 +931,7 @@ class BoreschRestraint:
         self.dihedrals[1].plot(picked_frame=frame, path=dirpath)
         self.dihedrals[2].plot(picked_frame=frame, path=dirpath)
 
-    def write(self, frame=None, path=None, force_constant=10.0, outtype="GMX"):
+    def write(self, frame=None, path=None, outtype="GMX"):
         """Writes out boresch restraint
 
         Input
@@ -960,10 +970,10 @@ class BoreschRestraint:
         else:
             dirpath = '.'
 
-        self._write_gmx(index=frame, path=dirpath,
-                        force_constant=force_constant)
+        self._write_gmx(index=frame, path=dirpath)
+                        #force_constant=force_constant)
 
-    def _write_gmx(self, index, path, force_constant):
+    def _write_gmx(self, index, path):
         # seek chosen frame
         self.atomgroup.universe.trajectory[index]
         self.atomgroup.write(f'{path}/ClosestRestraintFrame.gro')
@@ -975,22 +985,22 @@ class BoreschRestraint:
 
             # bond
             writers._write_intinters_bond_header(rfile)
-            writers._write_intinters_bond(self.bond, index, force_constant,
+            writers._write_intinters_bond(self.bond, index, self.bond.fc,
                                           rfile)
 
             # angle
             writers._write_intinters_angle_header(rfile)
             for angle in self.angles:
-                writers._write_intinters_angle(angle, index, force_constant,
+                writers._write_intinters_angle(angle, index, angle.fc,
                                                rfile)
 
             # dihedral
             writers._write_intinters_dihedral_header(rfile)
             for dihedral in self.dihedrals:
                 writers._write_intinters_dihedral(dihedral, index,
-                                                  force_constant, rfile)
+                                                  dihedral.fc , rfile)
 
-    def standard_state(self, frame=None, force_constant=10.0,
+    def standard_state(self, frame=None, 
                        temperature=298.15, calc_type="analytical"):
         """Reports the dG_off standard state correction energy for the
         given frame.
@@ -1018,9 +1028,9 @@ class BoreschRestraint:
         if calc_type != "analytical":
             raise NotImplementedError(f"{calc_type} is not implemented")
         else:
-            return self._analytical_energy(frame, force_constant, temperature)
+            return self._analytical_energy(frame, temperature)
 
-    def _analytical_energy(self, frame, force_constant, temperature):
+    def _analytical_energy(self, frame, temperature):
         """Get the dG_off standard state correction via the Boresch
         analytical method.
 
@@ -1041,19 +1051,22 @@ class BoreschRestraint:
         -----
         This is known to be inaccurate (see Yank).
         """
-        Gas_K = (8.314472*0.001) / 4.184  # Gas constant kcal/mol/K
+        Gas_K = (8.314472*0.001)   # Gas constant kJ/mol/K
         StandardV = 1.66  # standard volume in nm^3
 
         rAa = self.bond.values[frame] / 10  # convert to nm
         thA = np.radians(self.angles[0].values[frame])
         thB = np.radians(self.angles[1].values[frame])
 
-        frc_bond = force_constant * 100
-        frc_angle = force_constant
-        frc_dihe = force_constant
+        frc_bond = self.bond.fc
+        frc_angle_1 = self.angles[0].fc
+        frc_angle_2 = self.angles[1].fc
+        frc_dihedral_1 = self.dihedrals[0].fc
+        frc_dihedral_2 = self.dihedrals[1].fc
+        frc_dihedral_3 = self.dihedrals[2].fc
 
         numerator = 8.0 * (np.pi**2) * StandardV
-        numerator *= ((frc_bond * (frc_angle ** 2) * (frc_dihe ** 3)) ** 0.5)
+        numerator *= ((frc_bond * frc_angle_1 * frc_angle_2 * frc_dihedral_1 * frc_dihedral_2 * frc_dihedral_3) ** 0.5)
         denominator = (rAa ** 2) * np.sin(thA) * np.sin(thB)
         denominator *= ((2 * np.pi * Gas_K * temperature) ** 3)
 
