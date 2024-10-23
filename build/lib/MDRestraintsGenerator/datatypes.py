@@ -71,7 +71,7 @@ class VectorData:
         """Returns (value-mean)**2 """
         self.ms_values = (self.values - self.mean)**2
 
-    def plot(self, picked_frame=None, path='./', Temperature=298.15):
+    def plot(self, picked_frame=None, path='./'):
         """Plots the data
 
         Input
@@ -140,24 +140,6 @@ class VectorData:
             plt.axvline(self.values[picked_frame], color='k',
                         linestyle='dashed', linewidth=3,
                         label='picked')
-
-        # Now, adding the plot for the equation
-        k = self.fc  # Force constant in kJ/mol
-        kb = 0.0083145  # Boltzmann constant in kJ/mol/K
-        t = Temperature  # Temperature in Kelvin
-        x = self.values
-        x0 = self.mean  # Equilibrium position
-
-        P_x = np.sqrt(k / (2 * np.pi * kb * t)) * np.exp(-k * (x - x0)**2 / (2 * kb * t))
-
-        plt.subplot(222)
-        plt.plot(x, P_x, label='P(x)', color='b')
-        plt.legend(loc="best")
-
-        # Save the plot to png
-        #filename = f"{path}/{self.filename}.png"
-        #plt.savefig(filename, format="png")
-        #plt.close()
 
         # Set plot variables and save to png
         titlestring = f"Histogram of {self.atype} distribution"
@@ -1095,6 +1077,5 @@ class BoreschRestraint:
         denominator *= ((2 * np.pi * Gas_K * temperature) ** 3)
 
         dG = - Gas_K * temperature * np.log(numerator/denominator)
-        dG_kcal = dG * 0.239006
 
-        return dG_kcal
+        return dG
