@@ -28,7 +28,7 @@ Contents:
 
 import MDRestraintsGenerator.writers as writers
 from pathlib import Path
-
+import math
 import MDAnalysis as mda
 from MDAnalysis.selections import gromacs as mda_gmx
 import numpy as np
@@ -128,7 +128,7 @@ class VectorData:
         # Create histogram of quantity
         plt.subplot(222)
         bin_range = get_hist_binrange(self.atype, self.values)
-        n, bins, patches = plt.hist(self.values, color='c', bins=bin_range,
+        n, bins, patches = plt.hist(self.values, color='c', bins=bin_range, density = True,
                                     edgecolor='k', alpha=0.5, label='observed')
 
         # Plot vertical line of mean value
@@ -148,10 +148,10 @@ class VectorData:
         x = self.values
         x0 = self.mean  # Equilibrium position
 
-        P_x = np.sqrt(k / (2 * np.pi * kb * t)) * np.exp(-k * (x - x0)**2 / (2 * kb * t))
+        P_x = np.sqrt(k / (2 * np.pi * kb * t)) * np.exp(-k * (x - x0)**2 / (2 * kb * t)) 
 
         plt.subplot(222)
-        plt.plot(x, P_x, label='P(x)', color='b')
+        plt.scatter(x, P_x, label='P(x)', color='b')
         plt.legend(loc="best")
 
         # Save the plot to png
@@ -911,19 +911,42 @@ class BoreschRestraint:
     
     def fit_fc(self,temperature=298.15):
         """Function to fit the force constant of the Boresch restraint to the distribution observed in the trajectory"""
-        self.bond.fc = round((0.8314*temperature)/self.bond.var,3) # 0.8314 is kB*N in kJ/(mol.nm^2) ;
-        # kB * N = R = 8.314 J/mol.K; x10^-3 to convert it to kJ and x10^2 to convert A^-2 to nm^-2
-        print(f"bond force constant: {self.bond.fc} from variance {self.bond.var} by 0.8314*{temperature}/self.bond.var ")
-        self.angles[0].fc = round((0.008314*temperature)/self.angles[0].var,3) # No need to convert A^-2 to nm^-2 since its radians
-        self.angles[1].fc = round((0.008314*temperature)/self.angles[1].var,3)
-        print(f"angle force constant: {self.angles[0].fc} from variance {self.angles[0].var} by 0.008314*{temperature}/self.angles[0].var ")
-        print(f"angle force constant: {self.angles[1].fc} from variance {self.angles[1].var} by 0.008314*{temperature}/self.angles[1].var ")
-        self.dihedrals[0].fc = round((0.008314*temperature)/self.dihedrals[0].var,3)
-        self.dihedrals[1].fc = round((0.008314*temperature)/self.dihedrals[1].var,3)
-        self.dihedrals[2].fc = round((0.008314*temperature)/self.dihedrals[2].var,3)
-        print(f"dihedral force constant: {self.dihedrals[0].fc} from variance {self.dihedrals[0].var} by 0.008314*{temperature}/self.dihedrals[0].var ")
-        print(f'dihedral force constant: {self.dihedrals[1].fc} from variance {self.dihedrals[1].var} by 0.008314*{temperature}/self.dihedrals[1].var ')
-        print(f'dihedral force constant: {self.dihedrals[2].fc} from variance {self.dihedrals[2].var} by 0.008314*{temperature}/self.dihedrals[2].var ')
+        # MDA units: bond is in Angstrom, angle in degrees, dihedral in degrees
+        # In gromacs, fc is in kJ/mol/nm^2 for bond and kJ/mol/rad^2 for angles and dihedrals
+        # In gromacs, the mean angle however is in degrees
+        # In mdanalysis, the angle is in degrees
+
+        # Bond force constant (in kJ/mol/nm^2)
+        # R = 8.314 J/(mol K)
+        # R = 0.008314 kJ/(mol K)
+        # 1 nm = 10 Å
+        # 1 nm^2 = 100 Å^2
+        # R plus conversion factor to get kJ/mol/nm^2 = 0.8314
+        self.bond.fc = round((0.8314 * temperature) / self.bond.var, 3)
+        print(f"bond force constant: {self.bond.fc} from variance {self.bond.var} by 0.8314*{temperature}/self.bond.var")
+
+        # Convert angle variances from degrees to radians
+        angle_var_rad_0 = self.angles[0].var * (math.pi / 180) ** 2
+        angle_var_rad_1 = self.angles[1].var * (math.pi / 180) ** 2
+
+        # Angle force constants (in kJ/mol/rad^2)
+        self.angles[0].fc = round((0.008314 * temperature) / angle_var_rad_0, 3)
+        self.angles[1].fc = round((0.008314 * temperature) / angle_var_rad_1, 3)
+        print(f"angle force constant: {self.angles[0].fc} from variance {self.angles[0].var} (in radians: {angle_var_rad_0}) by 0.008314*{temperature}/{angle_var_rad_0}")
+        print(f"angle force constant: {self.angles[1].fc} from variance {self.angles[1].var} (in radians: {angle_var_rad_1}) by 0.008314*{temperature}/{angle_var_rad_1}")
+
+        # Convert dihedral variances from degrees to radians
+        dihedral_var_rad_0 = self.dihedrals[0].var * (math.pi / 180) ** 2
+        dihedral_var_rad_1 = self.dihedrals[1].var * (math.pi / 180) ** 2
+        dihedral_var_rad_2 = self.dihedrals[2].var * (math.pi / 180) ** 2
+
+        # Dihedral force constants (in kJ/mol/rad^2)
+        self.dihedrals[0].fc = round((0.008314 * temperature) / dihedral_var_rad_0, 3)
+        self.dihedrals[1].fc = round((0.008314 * temperature) / dihedral_var_rad_1, 3)
+        self.dihedrals[2].fc = round((0.008314 * temperature) / dihedral_var_rad_2, 3)
+        print(f"dihedral force constant: {self.dihedrals[0].fc} from variance {self.dihedrals[0].var} (in radians: {dihedral_var_rad_0}) by 0.008314*{temperature}/{dihedral_var_rad_0}")
+        print(f"dihedral force constant: {self.dihedrals[1].fc} from variance {self.dihedrals[1].var} (in radians: {dihedral_var_rad_1}) by 0.008314*{temperature}/{dihedral_var_rad_1}")
+        print(f"dihedral force constant: {self.dihedrals[2].fc} from variance {self.dihedrals[2].var} (in radians: {dihedral_var_rad_2}) by 0.008314*{temperature}/{dihedral_var_rad_2}")
 
     def plot(self, frame=None, path=None):
         """Plots all the analyzed data
@@ -1082,12 +1105,12 @@ class BoreschRestraint:
         thA = np.radians(self.angles[0].values[frame])
         thB = np.radians(self.angles[1].values[frame])
 
-        frc_bond = self.bond.fc
-        frc_angle_1 = self.angles[0].fc
-        frc_angle_2 = self.angles[1].fc
-        frc_dihedral_1 = self.dihedrals[0].fc
-        frc_dihedral_2 = self.dihedrals[1].fc
-        frc_dihedral_3 = self.dihedrals[2].fc
+        frc_bond = self.bond.fc # in kJ/mol/nm^2
+        frc_angle_1 = self.angles[0].fc # in kJ/mol/rad^2
+        frc_angle_2 = self.angles[1].fc # in kJ/mol/rad^2
+        frc_dihedral_1 = self.dihedrals[0].fc # in kJ/mol/rad^2
+        frc_dihedral_2 = self.dihedrals[1].fc # in kJ/mol/rad^2
+        frc_dihedral_3 = self.dihedrals[2].fc # in kJ/mol/rad^2
 
         numerator = 8.0 * (np.pi**2) * StandardV
         numerator *= ((frc_bond * frc_angle_1 * frc_angle_2 * frc_dihedral_1 * frc_dihedral_2 * frc_dihedral_3) ** 0.5)
@@ -1095,6 +1118,7 @@ class BoreschRestraint:
         denominator *= ((2 * np.pi * Gas_K * temperature) ** 3)
 
         dG = - Gas_K * temperature * np.log(numerator/denominator)
+        # convert to kcal/mol
         dG_kcal = dG * 0.239006
 
         return dG_kcal

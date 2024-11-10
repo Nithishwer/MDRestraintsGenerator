@@ -70,7 +70,7 @@ def _write_intinters_bond(bond, index, force_constant, rfile):
     atom1 = bond.atomgroup.atoms[0].ix + 1
     atom2 = bond.atomgroup.atoms[1].ix + 1
     length = bond.values[index] / 10.0
-    bond_fc = force_constant * 4.184 * 100
+    bond_fc = force_constant # No conversion required becuase fc is in kJ/mol/nm^2
     rfile.write(f"{atom1:>6}{atom2:>6}    6    {length:>6.3f}      0.0   "
                 f"{length:>6.3f}   {bond_fc:>6.2f}\n")
 
@@ -106,7 +106,7 @@ def _write_intinters_angle(angle, index, force_constant, rfile):
     .. versionchanged:: 0.2.0
        Renamed to include `intinters` in the name.
     """
-    angle_fc = force_constant * 4.184
+    angle_fc = force_constant # No conversion required becuase fc is in kJ/mol/rad^2
 
     atom1 = angle.atomgroup.atoms[0].ix + 1
     atom2 = angle.atomgroup.atoms[1].ix + 1
@@ -148,13 +148,13 @@ def _write_intinters_dihedral(dihedral, index, force_constant, rfile):
     .. versionchanged:: 0.2.0
        Renamed to include `intinters` in the name.
     """
-    angle_fc = force_constant * 4.184
+    angle_fc = force_constant # No conversion required becuase fc is in kJ/mol/rad^2
 
     atom1 = dihedral.atomgroup.atoms[0].ix + 1
     atom2 = dihedral.atomgroup.atoms[1].ix + 1
     atom3 = dihedral.atomgroup.atoms[2].ix + 1
     atom4 = dihedral.atomgroup.atoms[3].ix + 1
-    val = dihedral.values[index]
+    val = dihedral.values[index] 
     rfile.write(f"{atom1:>6}{atom2:>6}{atom3:>6}{atom4:>6}     2    "
                 f"{val:>6.3f}    0.0    {val:>6.3f}   {angle_fc:>6.2f}\n")
 
