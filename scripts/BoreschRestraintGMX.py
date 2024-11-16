@@ -44,7 +44,7 @@ if __name__ == "__main__":
                             help='output path for writing files')
         args = parser.parse_args()
         return args
-
+    
     args = parse_args()
 
     u = mda.Universe(args.top, args.traj)
@@ -74,11 +74,11 @@ if __name__ == "__main__":
     # Run the restraint analysis
     boresch.run()
 
-    # Plot out the statistics
-    boresch.restraint.plot(path=args.outpath)
-
     # Fit force constants
     boresch.restraint.fit_fc(temperature=args.temperature)
+
+    # Plot out the statistics
+    boresch.restraint.plot(path=args.outpath)
 
     # Write out the intermolecular section to a topology
     boresch.restraint.write(path=args.outpath)

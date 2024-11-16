@@ -140,18 +140,23 @@ class VectorData:
             plt.axvline(self.values[picked_frame], color='k',
                         linestyle='dashed', linewidth=3,
                         label='picked')
+            
 
         # Now, adding the plot for the equation
         k = self.fc  # Force constant in kJ/mol
-        kb = 0.0083145  # Boltzmann constant in kJ/mol/K
-        t = Temperature  # Temperature in Kelvin
-        x = self.values
-        x0 = self.mean  # Equilibrium position
 
-        P_x = np.sqrt(k / (2 * np.pi * kb * t)) * np.exp(-k * (x - x0)**2 / (2 * kb * t)) 
+
+        #kb = 0.0083145  # Boltzmann constant in kJ/mol/K
+        #t = Temperature  # Temperature in Kelvin
+        x = self.values
+        #x0 = self.mean  # Equilibrium position
+
+        # P_harmonic_x = np.sqrt(k / (2 * np.pi * kb * t)) * np.exp(-k * (x - x0)**2 / (2 * kb * t)) 
+        P_normal_x = 1 / (self.stdev * np.sqrt(2 * np.pi)) * np.exp(-0.5 * ((x - self.mean) / self.stdev)**2)
 
         plt.subplot(222)
-        plt.scatter(x, P_x, label='P(x)', color='b')
+        #plt.scatter(x, P_harmonic_x, label='Harmonic P(x)', color='g')
+        plt.scatter(x, P_normal_x, label='Force Constant fit P(x)', color='b')
         plt.legend(loc="best")
 
         # Save the plot to png
@@ -160,7 +165,7 @@ class VectorData:
         #plt.close()
 
         # Set plot variables and save to png
-        titlestring = f"Histogram of {self.atype} distribution"
+        titlestring = f"Histogram of {self.atype} distribution; std dev = {self.stdev:.2f} \n mean = {self.mean:.2f} \n Force constant = {self.fc:.2f} kJ/mol"
         plt.title(titlestring)
         xstring = f"{self.atype} [{self.units}]"
         plt.xlabel(xstring)
@@ -923,7 +928,7 @@ class BoreschRestraint:
         # 1 nm^2 = 100 Å^2
         # R plus conversion factor to get kJ/mol/nm^2 = 0.8314
         self.bond.fc = round((0.8314 * temperature) / self.bond.var, 3)
-        print(f"bond force constant: {self.bond.fc} from variance {self.bond.var} by 0.8314*{temperature}/self.bond.var")
+        print(f"bond force constant: {self.bond.fc} from variance {self.bond.var} by 0.8314*{temperature}/{self.bond.var}")
 
         # Convert angle variances from degrees to radians
         angle_var_rad_0 = self.angles[0].var * (math.pi / 180) ** 2
