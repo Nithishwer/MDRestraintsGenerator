@@ -928,7 +928,7 @@ class BoreschRestraint:
         # 1 nm^2 = 100 Å^2
         # R plus conversion factor to get kJ/mol/nm^2 = 0.8314
         self.bond.fc = round((0.8314 * temperature) / self.bond.var, 3)
-        print(f"bond force constant: {self.bond.fc} from variance {self.bond.var} by 0.8314*{temperature}/{self.bond.var}")
+        print(f"#bond force constant: {self.bond.fc} from variance {self.bond.var} by 0.8314*{temperature}/{self.bond.var}")
 
         # Convert angle variances from degrees to radians
         angle_var_rad_0 = self.angles[0].var * (math.pi / 180) ** 2
@@ -937,8 +937,8 @@ class BoreschRestraint:
         # Angle force constants (in kJ/mol/rad^2)
         self.angles[0].fc = round((0.008314 * temperature) / angle_var_rad_0, 3)
         self.angles[1].fc = round((0.008314 * temperature) / angle_var_rad_1, 3)
-        print(f"angle force constant: {self.angles[0].fc} from variance {self.angles[0].var} (in radians: {angle_var_rad_0}) by 0.008314*{temperature}/{angle_var_rad_0}")
-        print(f"angle force constant: {self.angles[1].fc} from variance {self.angles[1].var} (in radians: {angle_var_rad_1}) by 0.008314*{temperature}/{angle_var_rad_1}")
+        print(f"#angle force constant: {self.angles[0].fc} from variance {self.angles[0].var} (in radians: {angle_var_rad_0}) by 0.008314*{temperature}/{angle_var_rad_0}")
+        print(f"#angle force constant: {self.angles[1].fc} from variance {self.angles[1].var} (in radians: {angle_var_rad_1}) by 0.008314*{temperature}/{angle_var_rad_1}")
 
         # Convert dihedral variances from degrees to radians
         dihedral_var_rad_0 = self.dihedrals[0].var * (math.pi / 180) ** 2
@@ -949,9 +949,9 @@ class BoreschRestraint:
         self.dihedrals[0].fc = round((0.008314 * temperature) / dihedral_var_rad_0, 3)
         self.dihedrals[1].fc = round((0.008314 * temperature) / dihedral_var_rad_1, 3)
         self.dihedrals[2].fc = round((0.008314 * temperature) / dihedral_var_rad_2, 3)
-        print(f"dihedral force constant: {self.dihedrals[0].fc} from variance {self.dihedrals[0].var} (in radians: {dihedral_var_rad_0}) by 0.008314*{temperature}/{dihedral_var_rad_0}")
-        print(f"dihedral force constant: {self.dihedrals[1].fc} from variance {self.dihedrals[1].var} (in radians: {dihedral_var_rad_1}) by 0.008314*{temperature}/{dihedral_var_rad_1}")
-        print(f"dihedral force constant: {self.dihedrals[2].fc} from variance {self.dihedrals[2].var} (in radians: {dihedral_var_rad_2}) by 0.008314*{temperature}/{dihedral_var_rad_2}")
+        print(f"#dihedral force constant: {self.dihedrals[0].fc} from variance {self.dihedrals[0].var} (in radians: {dihedral_var_rad_0}) by 0.008314*{temperature}/{dihedral_var_rad_0}")
+        print(f"#dihedral force constant: {self.dihedrals[1].fc} from variance {self.dihedrals[1].var} (in radians: {dihedral_var_rad_1}) by 0.008314*{temperature}/{dihedral_var_rad_1}")
+        print(f"#dihedral force constant: {self.dihedrals[2].fc} from variance {self.dihedrals[2].var} (in radians: {dihedral_var_rad_2}) by 0.008314*{temperature}/{dihedral_var_rad_2}")
 
     def plot(self, frame=None, path=None):
         """Plots all the analyzed data
