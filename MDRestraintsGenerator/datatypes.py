@@ -65,7 +65,9 @@ class VectorData:
                 p_low = -180
             self.mean = circmean(self.values, low=p_low, high=p_high)
             self.stdev = circstd(self.values, low=p_low, high=p_high)
-            self.var = circvar(self.values, low=p_low, high=p_high)
+            #self.var = circvar(self.values, low=p_low, high=p_high)
+            self.var = self.stdev**2 # Angular dispersion and not variance
+            print(f"Mean: {self.mean}, Stdev: {self.stdev}, Var: {self.var}")
 
     def mean_squared(self):
         """Returns (value-mean)**2 """
