@@ -56,7 +56,8 @@ class VectorData:
         if not self.periodic:
             self.mean = self.values.mean()
             self.stdev = self.values.std()
-            self.var = self.values.var()
+            # Same behavior as for periodic data
+            self.var = self.stdev**2
         else:
             p_high = 180
             if self.atype == "angle":
@@ -65,7 +66,7 @@ class VectorData:
                 p_low = -180
             self.mean = circmean(self.values, low=p_low, high=p_high)
             self.stdev = circstd(self.values, low=p_low, high=p_high)
-            # Keep angular dispersion in degrees squared for force-constant fitting.
+            # Keep angular dispersion in degrees squared across SciPy versions.
             self.var = self.stdev**2
 
     def mean_squared(self):
