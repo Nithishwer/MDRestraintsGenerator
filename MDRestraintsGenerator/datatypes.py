@@ -33,7 +33,7 @@ import MDAnalysis as mda
 from MDAnalysis.selections import gromacs as mda_gmx
 import numpy as np
 from scipy import stats
-from scipy.stats import circmean, circvar, circstd
+from scipy.stats import circmean, circstd
 from matplotlib import pyplot as plt
 
 
@@ -56,7 +56,8 @@ class VectorData:
         if not self.periodic:
             self.mean = self.values.mean()
             self.stdev = self.values.std()
-            self.var = self.values.var()
+            # Same behavior as for periodic data
+            self.var = self.stdev**2
         else:
             p_high = 180
             if self.atype == "angle":
@@ -65,9 +66,8 @@ class VectorData:
                 p_low = -180
             self.mean = circmean(self.values, low=p_low, high=p_high)
             self.stdev = circstd(self.values, low=p_low, high=p_high)
-            #self.var = circvar(self.values, low=p_low, high=p_high)
-            self.var = self.stdev**2 # Angular dispersion and not variance
-            print(f"Mean: {self.mean}, Stdev: {self.stdev}, Var: {self.var}")
+            # Keep angular dispersion in degrees squared across SciPy versions.
+            self.var = self.stdev**2
 
     def mean_squared(self):
         """Returns (value-mean)**2 """
