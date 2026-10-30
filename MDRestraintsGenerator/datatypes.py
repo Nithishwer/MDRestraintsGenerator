@@ -33,7 +33,7 @@ import MDAnalysis as mda
 from MDAnalysis.selections import gromacs as mda_gmx
 import numpy as np
 from scipy import stats
-from scipy.stats import circmean, circvar, circstd
+from scipy.stats import circmean, circstd
 from matplotlib import pyplot as plt
 
 
@@ -65,7 +65,8 @@ class VectorData:
                 p_low = -180
             self.mean = circmean(self.values, low=p_low, high=p_high)
             self.stdev = circstd(self.values, low=p_low, high=p_high)
-            self.var = circvar(self.values, low=p_low, high=p_high)
+            # Keep angular dispersion in degrees squared for force-constant fitting.
+            self.var = self.stdev**2
 
     def mean_squared(self):
         """Returns (value-mean)**2 """
